@@ -37,7 +37,7 @@ export function HowItWorks() {
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
           <p className="text-indigo-600 font-bold text-sm tracking-widest uppercase mb-4">
-            The Pipeline
+           How It Works
           </p>
           <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
             From Incident to Answer. In Under Two Minutes.
