@@ -82,26 +82,19 @@ async function callAgent(agentId, message, imageBase64 = null) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-    const response = await nova.messages.create(
-      {
-        model: agentId,
-        max_tokens: 2000,
-        messages: [
-          {
-            role: 'user',
-            content: content,
-          },
-        ],
-      },
-      {
-        timeout: timeout,
-      }
-    );
+    const response = await nova.chat.completions.create({
+      model: agentId,
+      messages: [
+        {
+          role: 'user',
+          content: content,
+        },
+      ],
+    });
 
     clearTimeout(timeoutId);
 
-    const textContent = response.content.find(block => block.type === 'text');
-    return textContent?.text || '';
+    return response.choices[0].message.content || '';
   } catch (error) {
     console.error(`Error calling agent ${agentId}:`, error);
     throw new Error(`Agent ${agentId} failed: ${error.message}`);
