@@ -21,6 +21,11 @@ const AGENT_2_ID = process.env.AGENT_2_ID;
 const AGENT_3_ID = process.env.AGENT_3_ID;
 const AGENT_4_ID = process.env.AGENT_4_ID;
 
+function getTodayDate() {
+  const now = new Date();
+  return now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
 function formatClaimData(claimData) {
   const {
     name,
@@ -112,6 +117,7 @@ app.post('/api/process-claim', async (req, res) => {
     }
 
     const formattedClaim = formatClaimData(claimData);
+    const todayDate = getTodayDate();
 
     console.log('Processing claim for:', claimData.name);
 
@@ -157,7 +163,7 @@ app.post('/api/process-claim', async (req, res) => {
       console.log('Calling Agent 4 (Settlement Recommendation)...');
       agent4Output = await callAgent(
         AGENT_4_ID,
-        `Claim Summary:\n${agent1Output}\n\nDamage Assessment:\n${agent2Output}\n\nCost Analysis:\n${agent3Output}\n\nBased on all information provided, please generate a comprehensive settlement recommendation including: 1) Claim validation status, 2) Damage verification against description, 3) Cost justification, 4) Final recommendation (Settlement Recommended, Pending Adjuster Review, Claim Denied), and 5) Any flags or concerns requiring human review.`
+        `Today's date is ${todayDate}. You must use this exact date for the SETTLEMENT REPORT DATE field.\n\nClaim Summary:\n${agent1Output}\n\nDamage Assessment:\n${agent2Output}\n\nCost Analysis:\n${agent3Output}\n\nBased on all information provided, please generate a comprehensive settlement recommendation including: 1) Claim validation status, 2) Damage verification against description, 3) Cost justification, 4) Final recommendation (Settlement Recommended, Pending Adjuster Review, Claim Denied), and 5) Any flags or concerns requiring human review.`
       );
     } catch (error) {
       console.error('Agent 4 failed:', error);
