@@ -1,0 +1,198 @@
+import express from 'express';
+import cors from 'cors';
+import OpenAI from 'openai';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const app = express();
+const port = process.env.PORT || 3001;
+
+app.use(cors());
+app.use(express.json({ limit: '50mb' }));
+
+const nova = new OpenAI({
+  baseURL: 'https://api.nova.amazon.com/v1',
+  apiKey: process.env.NOVA_API_KEY,
+});
+
+const AGENT_1_ID = process.env.AGENT_1_ID;
+const AGENT_2_ID = process.env.AGENT_2_ID;
+const AGENT_3_ID = process.env.AGENT_3_ID;
+const AGENT_4_ID = process.env.AGENT_4_ID;
+
+function formatClaimData(claimData) {
+  const {
+    name,
+    policyNumber,
+    incidentDate,
+    city,
+    state,
+    country,
+    category,
+    description,
+    estimatedValue,
+    thirdParties,
+  } = claimData;
+
+  return `
+INSURANCE CLAIM SUBMISSION
+===========================
+
+Claimant Name: ${name}
+Policy Number: ${policyNumber}
+Date of Incident: ${incidentDate}
+Incident Location: ${city}, ${state}, ${country}
+Claim Category: ${category}
+Estimated Loss Value: $${estimatedValue}
+
+Incident Description:
+${description}
+
+Third Parties Involved:
+${thirdParties || 'None reported'}
+
+Please analyze this claim and extract all relevant information for processing.
+`;
+}
+
+async function callAgent(agentId, message, imageBase64 = null) {
+  const timeout = 120000;
+
+  try {
+    let content;
+
+    if (imageBase64) {
+      content = [
+        {
+          type: 'text',
+          text: message,
+        },
+        {
+          type: 'image_url',
+          image_url: {
+            url: `data:image/jpeg;base64,${imageBase64}`,
+          },
+        },
+      ];
+    } else {
+      content = message;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    const response = await nova.messages.create(
+      {
+        model: agentId,
+        max_tokens: 2000,
+        messages: [
+          {
+            role: 'user',
+            content: content,
+          },
+        ],
+      },
+      {
+        timeout: timeout,
+      }
+    );
+
+    clearTimeout(timeoutId);
+
+    const textContent = response.content.find(block => block.type === 'text');
+    return textContent?.text || '';
+  } catch (error) {
+    console.error(`Error calling agent ${agentId}:`, error);
+    throw new Error(`Agent ${agentId} failed: ${error.message}`);
+  }
+}
+
+app.post('/api/process-claim', async (req, res) => {
+  try {
+    const { claimData, imageBase64 } = req.body;
+
+    if (!claimData || !imageBase64) {
+      return res.status(400).json({
+        error: 'Missing required fields: claimData and imageBase64',
+      });
+    }
+
+    const formattedClaim = formatClaimData(claimData);
+
+    console.log('Processing claim for:', claimData.name);
+
+    let agent1Output;
+    try {
+      console.log('Calling Agent 1 (Claim Intake)...');
+      agent1Output = await callAgent(
+        AGENT_1_ID,
+        `${formattedClaim}\n\nPlease validate and extract all claim details.`
+      );
+    } catch (error) {
+      console.error('Agent 1 failed:', error);
+      return res.status(400).json({ error: `Agent 1 failed: ${error.message}` });
+    }
+
+    let agent2Output;
+    try {
+      console.log('Calling Agent 2 (Damage Analysis)...');
+      agent2Output = await callAgent(
+        AGENT_2_ID,
+        `Claim Details:\n${agent1Output}\n\nPlease analyze the attached damage photo and describe the visible damage, extent of damage, and affected areas.`,
+        imageBase64
+      );
+    } catch (error) {
+      console.error('Agent 2 failed:', error);
+      return res.status(400).json({ error: `Agent 2 failed: ${error.message}` });
+    }
+
+    let agent3Output;
+    try {
+      console.log('Calling Agent 3 (Cost Research)...');
+      agent3Output = await callAgent(
+        AGENT_3_ID,
+        `Claim Details:\n${agent1Output}\n\nDamage Assessment:\n${agent2Output}\n\nBased on the location (${claimData.city}, ${claimData.state}), damage type, and current market rates, please research and estimate repair costs. Provide itemized cost breakdown.`
+      );
+    } catch (error) {
+      console.error('Agent 3 failed:', error);
+      return res.status(400).json({ error: `Agent 3 failed: ${error.message}` });
+    }
+
+    let agent4Output;
+    try {
+      console.log('Calling Agent 4 (Settlement Recommendation)...');
+      agent4Output = await callAgent(
+        AGENT_4_ID,
+        `Claim Summary:\n${agent1Output}\n\nDamage Assessment:\n${agent2Output}\n\nCost Analysis:\n${agent3Output}\n\nBased on all information provided, please generate a comprehensive settlement recommendation including: 1) Claim validation status, 2) Damage verification against description, 3) Cost justification, 4) Final recommendation (Settlement Recommended, Pending Adjuster Review, Claim Denied), and 5) Any flags or concerns requiring human review.`
+      );
+    } catch (error) {
+      console.error('Agent 4 failed:', error);
+      return res.status(400).json({ error: `Agent 4 failed: ${error.message}` });
+    }
+
+    console.log('All agents processed successfully');
+
+    res.json({
+      agent1: agent1Output,
+      agent2: agent2Output,
+      agent3: agent3Output,
+      agent4: agent4Output,
+    });
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: error.message,
+    });
+  }
+});
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+app.listen(port, () => {
+  console.log(`ClaimLens backend server running on port ${port}`);
+  console.log(`Health check: http://localhost:${port}/health`);
+});
