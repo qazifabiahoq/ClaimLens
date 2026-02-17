@@ -21,6 +21,16 @@ const AGENT_2_ID = process.env.AGENT_2_ID;
 const AGENT_3_ID = process.env.AGENT_3_ID;
 const AGENT_4_ID = process.env.AGENT_4_ID;
 
+function stripCitations(text) {
+  // Remove hype-citation tags and markdown links like ([site.com](url))
+  return text
+    .replace(/\(\[.*?\]\(.*?\)\)/g, '')
+    .replace(/\[.*?\]\(https?:\/\/.*?\)/g, '')
+    .replace(/<hype-citation[^>]*>.*?<\/hype-citation>/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 function getTodayDate() {
   const now = new Date();
   return now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -149,10 +159,11 @@ app.post('/api/process-claim', async (req, res) => {
     let agent3Output;
     try {
       console.log('Calling Agent 3 (Cost Research)...');
-      agent3Output = await callAgent(
+      const rawAgent3Output = await callAgent(
         AGENT_3_ID,
         `Claim Details:\n${agent1Output}\n\nDamage Assessment:\n${agent2Output}\n\nBased on the location (${claimData.city}, ${claimData.state}), damage type, and current market rates, please research and estimate repair costs. Provide itemized cost breakdown.`
       );
+      agent3Output = stripCitations(rawAgent3Output);
     } catch (error) {
       console.error('Agent 3 failed:', error);
       return res.status(400).json({ error: `Agent 3 failed: ${error.message}` });
