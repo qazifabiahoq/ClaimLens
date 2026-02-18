@@ -256,6 +256,13 @@ ${results.agent4}
       </button>
 
       <button
+        onClick={() => window.location.href = `mailto:adjuster@claimlens.com?subject=Claim ${claimId} - Human Review Requested&body=Claimant: ${claimantName}%0AClaim ID: ${claimId}%0A%0APlease review this claim.`}
+        className="w-full bg-slate-700 text-white px-6 py-4 rounded-lg font-semibold hover:bg-slate-800 transition flex items-center justify-center gap-2"
+      >
+        Connect to Human Adjuster
+      </button>
+
+      <button
         onClick={onReset}
         className="w-full bg-indigo-600 text-white px-6 py-4 rounded-lg font-semibold hover:bg-indigo-700 transition"
       >
