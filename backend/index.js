@@ -215,7 +215,7 @@ app.post('/api/chat', async (req, res) => {
       : `You are ClaimLens Assistant, a professional insurance claims support agent. Answer questions about the claims process clearly and concisely. Use plain professional prose only. No markdown, no emojis, no bullet points.`;
 
     const response = await nova.chat.completions.create({
-      model: 'nova-2-lite-v1',
+      model: AGENT_1_ID,
       messages: [
         { role: 'system', content: systemContext },
         { role: 'user', content: message },
