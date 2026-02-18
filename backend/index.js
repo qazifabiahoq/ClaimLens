@@ -214,11 +214,14 @@ app.post('/api/chat', async (req, res) => {
       ? `You are ClaimLens Assistant, a professional insurance claims support agent. The user has questions about their processed claim. Here are the full claim results:\n\n${claimContext}\n\nAnswer questions clearly and concisely based on these results. Use plain professional prose only. No markdown headers, no bullet points, no emojis, no tables, no bold text. Write in short clear paragraphs like a professional adjuster would speak. Be direct and helpful.`
       : `You are ClaimLens Assistant, a professional insurance claims support agent. Answer questions about the claims process clearly and concisely. Use plain professional prose only. No markdown, no emojis, no bullet points.`;
 
+    const fullMessage = claimContext
+      ? `You are ClaimLens Assistant, a professional insurance claims support agent. Answer in plain professional prose only. No markdown, no bullet points, no emojis, no headers, no tables. Short clear paragraphs only.\n\nHere are the full claim results:\n\n${claimContext}\n\nUser question: ${message}`
+      : `You are ClaimLens Assistant, a professional insurance claims support agent. Answer in plain professional prose only. No markdown, no bullet points, no emojis.\n\nUser question: ${message}`;
+
     const response = await nova.chat.completions.create({
       model: AGENT_1_ID,
       messages: [
-        { role: 'system', content: systemContext },
-        { role: 'user', content: message },
+        { role: 'user', content: fullMessage },
       ],
     });
 
