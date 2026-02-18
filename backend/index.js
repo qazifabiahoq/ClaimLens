@@ -211,8 +211,8 @@ app.post('/api/chat', async (req, res) => {
     }
 
     const systemContext = claimContext
-      ? `You are a helpful ClaimLens assistant. The user has just processed an insurance claim and has questions about their results. Here are the full claim results for context:\n\n${claimContext}\n\nAnswer the user's questions clearly and professionally based on these results.`
-      : `You are a helpful ClaimLens assistant. Answer questions about the insurance claims process clearly and professionally.`;
+      ? `You are ClaimLens Assistant, a professional insurance claims support agent. The user has questions about their processed claim. Here are the full claim results:\n\n${claimContext}\n\nAnswer questions clearly and concisely based on these results. Use plain professional prose only. No markdown headers, no bullet points, no emojis, no tables, no bold text. Write in short clear paragraphs like a professional adjuster would speak. Be direct and helpful.`
+      : `You are ClaimLens Assistant, a professional insurance claims support agent. Answer questions about the claims process clearly and concisely. Use plain professional prose only. No markdown, no emojis, no bullet points.`;
 
     const response = await nova.chat.completions.create({
       model: 'nova-2-lite-v1',
