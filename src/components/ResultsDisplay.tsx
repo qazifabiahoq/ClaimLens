@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ClipboardList, Camera, DollarSign, FileCheck, ChevronDown, ChevronUp } from 'lucide-react';
+import { ClipboardList, Camera, DollarSign, FileCheck, ChevronDown, ChevronUp, MessageSquare, Send, X } from 'lucide-react';
 
 interface ResultsDisplayProps {
   claimId: string;
@@ -107,6 +107,10 @@ export function ResultsDisplay({ claimId, claimantName, results, onReset }: Resu
     2: true,
     3: true,
   });
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
 
   const status = getStatusFromAgent4(results.agent4);
 
@@ -115,6 +119,77 @@ export function ResultsDisplay({ claimId, claimantName, results, onReset }: Resu
       ...prev,
       [index]: !prev[index],
     }));
+  };
+
+  const handleDownloadReport = () => {
+    const reportContent = `CLAIM REPORT
+============
+Claim ID: ${claimId}
+Claimant: ${claimantName}
+Generated: ${new Date().toLocaleString()}
+
+CLAIM INTAKE
+============
+${results.agent1}
+
+DAMAGE ASSESSMENT
+=================
+${results.agent2}
+
+COST ESTIMATE
+=============
+${results.agent3}
+
+SETTLEMENT RECOMMENDATION
+=========================
+${results.agent4}
+`;
+
+    const blob = new Blob([reportContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${claimId}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleSendMessage = async () => {
+    if (!chatInput.trim()) return;
+
+    const userMessage = chatInput.trim();
+    setChatInput('');
+
+    setChatMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setChatLoading(true);
+
+    try {
+      const claimContext = `Claim ID: ${claimId}\nClaimant: ${claimantName}\n\nClaim Intake:\n${results.agent1}\n\nDamage Assessment:\n${results.agent2}\n\nCost Estimate:\n${results.agent3}\n\nSettlement Recommendation:\n${results.agent4}`;
+
+      const apiUrl = `${import.meta.env.VITE_API_URL}/api/chat`;
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMessage,
+          claimContext: claimContext,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setChatMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
+    } catch (error) {
+      console.error('Chat error:', error);
+      setChatMessages(prev => [...prev, { role: 'assistant', content: 'Error: Unable to process your message. Please try again.' }]);
+    } finally {
+      setChatLoading(false);
+    }
   };
 
   return (
@@ -130,7 +205,7 @@ export function ResultsDisplay({ claimId, claimantName, results, onReset }: Resu
             <div className={`inline-block px-4 py-2 rounded-lg font-semibold text-sm ${status.color}`}>
               {status.text}
             </div>
-            <button className="mt-4 px-6 py-2 border border-white text-white rounded-lg hover:bg-white hover:text-slate-900 transition font-medium">
+            <button onClick={handleDownloadReport} className="mt-4 px-6 py-2 border border-white text-white rounded-lg hover:bg-white hover:text-slate-900 transition font-medium">
               Download Report
             </button>
           </div>
@@ -173,11 +248,71 @@ export function ResultsDisplay({ claimId, claimantName, results, onReset }: Resu
       </div>
 
       <button
+        onClick={() => setChatOpen(true)}
+        className="w-full bg-blue-600 text-white px-6 py-4 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2"
+      >
+        <MessageSquare className="w-5 h-5" />
+        Discuss This Claim
+      </button>
+
+      <button
         onClick={onReset}
         className="w-full bg-indigo-600 text-white px-6 py-4 rounded-lg font-semibold hover:bg-indigo-700 transition"
       >
         Submit Another Claim
       </button>
+
+      {chatOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end z-50">
+          <div className="w-full md:w-96 bg-white rounded-t-lg md:rounded-lg shadow-lg flex flex-col max-h-96 md:max-h-screen">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+              <h3 className="font-semibold text-slate-900">Discuss This Claim</h3>
+              <button onClick={() => setChatOpen(false)} className="text-slate-500 hover:text-slate-700">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {chatMessages.length === 0 && (
+                <p className="text-sm text-slate-500 text-center py-8">Ask questions about your claim results...</p>
+              )}
+              {chatMessages.map((msg, index) => (
+                <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-xs px-4 py-2 rounded-lg ${msg.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-900'}`}>
+                    <p className="text-sm">{msg.content}</p>
+                  </div>
+                </div>
+              ))}
+              {chatLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-slate-100 text-slate-900 px-4 py-2 rounded-lg">
+                    <p className="text-sm">Thinking...</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="px-4 py-4 border-t border-slate-200 flex gap-2">
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                placeholder="Ask a question..."
+                className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                disabled={chatLoading}
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={chatLoading || !chatInput.trim()}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition disabled:bg-slate-300"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

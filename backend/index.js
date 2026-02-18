@@ -202,6 +202,40 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { message, claimContext } = req.body;
+
+    if (!message || !claimContext) {
+      return res.status(400).json({
+        error: 'Missing required fields: message and claimContext',
+      });
+    }
+
+    const response = await nova.chat.completions.create({
+      model: 'nova-2-lite-v1',
+      messages: [
+        {
+          role: 'user',
+          content: `You are a helpful insurance claim assistant. Here is the claim information:\n\n${claimContext}\n\nUser question: ${message}`,
+        },
+      ],
+    });
+
+    const assistantMessage = response.choices[0].message.content || '';
+
+    res.json({
+      response: assistantMessage,
+    });
+  } catch (error) {
+    console.error('Chat error:', error);
+    res.status(500).json({
+      error: 'Failed to process chat message',
+      message: error.message,
+    });
+  }
+});
+
 app.listen(port, () => {
   console.log(`ClaimLens backend server running on port ${port}`);
   console.log(`Health check: http://localhost:${port}/health`);
