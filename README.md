@@ -4,7 +4,7 @@ AI-Powered Insurance Claims Processing. Decisions in Minutes.
 
 Live Demo: [https://claim-lens-xi.vercel.app](https://claim-lens-xi.vercel.app)
 
-Blog post : https://builder.aws.com/post/39rTAiy3PknegtXV6n2csRB24yN_p/claimlens-accelerating-insurance-claims-with-amazon-nova
+Blog post : https://builder.aws.com/content/39rRB83mVGi7lhmHOPAVlwzKq87/claimlens-accelerating-insurance-claims-with-amazon-nova
 
 
 ---
