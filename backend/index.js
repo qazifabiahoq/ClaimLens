@@ -206,33 +206,27 @@ app.post('/api/chat', async (req, res) => {
   try {
     const { message, claimContext } = req.body;
 
-    if (!message || !claimContext) {
-      return res.status(400).json({
-        error: 'Missing required fields: message and claimContext',
-      });
+    if (!message) {
+      return res.status(400).json({ error: 'Missing required field: message' });
     }
+
+    const systemContext = claimContext
+      ? `You are a helpful ClaimLens assistant. The user has just processed an insurance claim and has questions about their results. Here are the full claim results for context:\n\n${claimContext}\n\nAnswer the user's questions clearly and professionally based on these results.`
+      : `You are a helpful ClaimLens assistant. Answer questions about the insurance claims process clearly and professionally.`;
 
     const response = await nova.chat.completions.create({
       model: 'nova-2-lite-v1',
       messages: [
-        {
-          role: 'user',
-          content: `You are a helpful insurance claim assistant. Here is the claim information:\n\n${claimContext}\n\nUser question: ${message}`,
-        },
+        { role: 'system', content: systemContext },
+        { role: 'user', content: message },
       ],
     });
 
-    const assistantMessage = response.choices[0].message.content || '';
-
-    res.json({
-      response: assistantMessage,
-    });
+    const reply = response.choices[0].message.content || '';
+    res.json({ reply });
   } catch (error) {
     console.error('Chat error:', error);
-    res.status(500).json({
-      error: 'Failed to process chat message',
-      message: error.message,
-    });
+    res.status(500).json({ error: 'Chat failed', message: error.message });
   }
 });
 
