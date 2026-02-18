@@ -183,7 +183,7 @@ ${results.agent4}
       }
 
       const data = await response.json();
-      setChatMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
+      setChatMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
     } catch (error) {
       console.error('Chat error:', error);
       setChatMessages(prev => [...prev, { role: 'assistant', content: 'Error: Unable to process your message. Please try again.' }]);
