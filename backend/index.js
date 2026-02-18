@@ -215,8 +215,8 @@ app.post('/api/chat', async (req, res) => {
       : `You are ClaimLens Assistant, a professional insurance claims support agent. Answer questions about the claims process clearly and concisely. Use plain professional prose only. No markdown, no emojis, no bullet points.`;
 
     const fullMessage = claimContext
-      ? `You are ClaimLens Assistant, a professional insurance claims support agent. Answer in plain professional prose only. No markdown, no bullet points, no emojis, no headers, no tables. Short clear paragraphs only.\n\nHere are the full claim results:\n\n${claimContext}\n\nUser question: ${message}`
-      : `You are ClaimLens Assistant, a professional insurance claims support agent. Answer in plain professional prose only. No markdown, no bullet points, no emojis.\n\nUser question: ${message}`;
+      ? `You are ClaimLens Assistant, a professional insurance claims support agent. The claimant is asking about their processed claim. Use the claim data below as context to answer their question. Do NOT repeat or summarize the claim data in your response. Just answer the question directly in 2-3 short sentences of plain professional prose. No markdown, no bullet points, no emojis, no headers, no tables.\n\nClaim context:\n${claimContext}\n\nQuestion: ${message}`
+      : `You are ClaimLens Assistant, a professional insurance claims support agent. Answer in plain professional prose only. No markdown, no bullet points, no emojis. 2-3 sentences maximum.\n\nQuestion: ${message}`;
 
     const response = await nova.chat.completions.create({
       model: AGENT_1_ID,
