@@ -1,7 +1,8 @@
 # ClaimLens
+
 AI-Powered Insurance Claims Processing. Decisions in Minutes.
 
-Live Demo: https://claim-lens-xi.vercel.app
+Live Demo: [https://claim-lens-xi.vercel.app](https://claim-lens-xi.vercel.app)
 
 ---
 
@@ -22,6 +23,12 @@ ClaimLens was built to change that.
 ClaimLens is an AI claims processing platform that takes a claimant's submission, including their details and damage photos, and returns a complete adjuster-ready settlement recommendation in under two minutes.
 
 The claimant fills out a form and uploads photos of the damage. Behind the scenes, four specialized AI agents work through the claim in sequence, each doing one job really well and passing their findings to the next. By the time the pipeline finishes, the output is a professional report with verified damage assessment, current regional repair cost estimates, cross-referenced findings, and a clear settlement recommendation.
+
+Once the settlement recommendation is generated, the claimant can download the full settlement report directly from the platform.
+
+There is also a "Discuss This" button where an AI chat pops up on the left side of the screen. The claimant can ask questions about the specific claim they submitted, and the AI responds using the structured findings from all four agents.
+
+In addition, there is a "Connect to Human Adjuster" button where the claimant can email customer service directly if they want manual review or additional clarification.
 
 The adjuster reviews it, confirms the deductible, and approves. What previously took hours of manual work now takes about ninety seconds.
 
@@ -84,7 +91,6 @@ The insurance industry processes hundreds of millions of claims every year. The 
 ClaimLens demonstrates that the core claims workflow, intake, damage assessment, cost research, and settlement recommendation, can be fully automated for the majority of straightforward claims. This frees human adjusters to focus their expertise on complex cases, fraud investigation, and the edge cases that genuinely need human judgment.
 
 A process that used to take hours now takes under two minutes. That is the whole point.
-
 
 ---
 
