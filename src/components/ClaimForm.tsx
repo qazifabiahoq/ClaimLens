@@ -23,6 +23,7 @@ export function ClaimForm({ onSubmit, isLoading }: ClaimFormProps) {
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -87,6 +88,41 @@ export function ClaimForm({ onSubmit, isLoading }: ClaimFormProps) {
     }
   };
 
+  function validateRules(): Record<string, string> {
+    const errors: Record<string, string> = {};
+
+    if (!/^[A-Za-z0-9\-]{6,30}$/.test(formData.policyNumber)) {
+      errors.policyNumber = 'Must be 6–30 alphanumeric characters (dashes allowed).';
+    }
+
+    if (formData.incidentDate) {
+      const incident = new Date(formData.incidentDate);
+      const today = new Date();
+      const twoYearsAgo = new Date();
+      twoYearsAgo.setFullYear(today.getFullYear() - 2);
+      if (incident > today) {
+        errors.incidentDate = 'Incident date cannot be in the future.';
+      } else if (incident < twoYearsAgo) {
+        errors.incidentDate = 'Incident date cannot be more than 2 years ago.';
+      }
+    }
+
+    const value = parseFloat(formData.estimatedValue);
+    if (formData.estimatedValue) {
+      if (isNaN(value) || value <= 0) {
+        errors.estimatedValue = 'Must be greater than $0.';
+      } else if (value > 10000000) {
+        errors.estimatedValue = 'Cannot exceed $10,000,000.';
+      }
+    }
+
+    if (formData.description && formData.description.trim().length < 20) {
+      errors.description = 'Description must be at least 20 characters.';
+    }
+
+    return errors;
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -94,6 +130,13 @@ export function ClaimForm({ onSubmit, isLoading }: ClaimFormProps) {
       alert('Please fill in all required fields and upload an image');
       return;
     }
+
+    const ruleErrors = validateRules();
+    if (Object.keys(ruleErrors).length > 0) {
+      setFormErrors(ruleErrors);
+      return;
+    }
+    setFormErrors({});
 
     const reader = new FileReader();
     reader.onload = async (e) => {
@@ -161,9 +204,10 @@ export function ClaimForm({ onSubmit, isLoading }: ClaimFormProps) {
                     value={formData.policyNumber}
                     onChange={handleInputChange}
                     disabled={isLoading}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 disabled:bg-slate-50 disabled:cursor-not-allowed"
+                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-1 disabled:bg-slate-50 disabled:cursor-not-allowed ${formErrors.policyNumber ? 'border-red-400 focus:border-red-400 focus:ring-red-400' : 'border-slate-300 focus:border-indigo-600 focus:ring-indigo-600'}`}
                     required
                   />
+                  {formErrors.policyNumber && <p className="mt-1 text-xs text-red-600">{formErrors.policyNumber}</p>}
                 </div>
 
                 <div>
@@ -176,9 +220,10 @@ export function ClaimForm({ onSubmit, isLoading }: ClaimFormProps) {
                     value={formData.incidentDate}
                     onChange={handleInputChange}
                     disabled={isLoading}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 disabled:bg-slate-50 disabled:cursor-not-allowed"
+                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-1 disabled:bg-slate-50 disabled:cursor-not-allowed ${formErrors.incidentDate ? 'border-red-400 focus:border-red-400 focus:ring-red-400' : 'border-slate-300 focus:border-indigo-600 focus:ring-indigo-600'}`}
                     required
                   />
+                  {formErrors.incidentDate && <p className="mt-1 text-xs text-red-600">{formErrors.incidentDate}</p>}
                 </div>
 
                 <div>
@@ -250,9 +295,10 @@ export function ClaimForm({ onSubmit, isLoading }: ClaimFormProps) {
                     disabled={isLoading}
                     rows={4}
                     placeholder="Describe the incident in detail..."
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 disabled:bg-slate-50 disabled:cursor-not-allowed resize-none"
+                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-1 disabled:bg-slate-50 disabled:cursor-not-allowed resize-none ${formErrors.description ? 'border-red-400 focus:border-red-400 focus:ring-red-400' : 'border-slate-300 focus:border-indigo-600 focus:ring-indigo-600'}`}
                     required
                   />
+                  {formErrors.description && <p className="mt-1 text-xs text-red-600">{formErrors.description}</p>}
                 </div>
 
                 <div>
@@ -267,10 +313,11 @@ export function ClaimForm({ onSubmit, isLoading }: ClaimFormProps) {
                       value={formData.estimatedValue}
                       onChange={handleInputChange}
                       disabled={isLoading}
-                      className="w-full pl-8 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 disabled:bg-slate-50 disabled:cursor-not-allowed"
+                      className={`w-full pl-8 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-1 disabled:bg-slate-50 disabled:cursor-not-allowed ${formErrors.estimatedValue ? 'border-red-400 focus:border-red-400 focus:ring-red-400' : 'border-slate-300 focus:border-indigo-600 focus:ring-indigo-600'}`}
                       required
                     />
                   </div>
+                  {formErrors.estimatedValue && <p className="mt-1 text-xs text-red-600">{formErrors.estimatedValue}</p>}
                 </div>
 
                 <div>
