@@ -37,6 +37,26 @@ The adjuster reviews it, confirms the deductible, and approves. What previously 
 
 ---
 
+## Deterministic Rules Engine
+
+Before any AI agent is invoked, every claim submission passes through a deterministic rules engine. These are hard, non-negotiable checks that run in milliseconds and require no model inference.
+
+The rules engine validates the following:
+
+**Policy number format.** The policy number must be 6 to 30 alphanumeric characters. Dashes are permitted. Submissions outside this format are rejected immediately.
+
+**Incident date range.** The incident date must fall within the last two years and cannot be set in the future. A date more than two years in the past falls outside standard claim filing windows. A future date indicates a data entry error.
+
+**Estimated loss value.** The claimed value must be greater than zero and cannot exceed ten million dollars. Claims outside this range are flagged before any cost research is run.
+
+**Incident description length.** The description must be at least twenty characters. Submissions with placeholder text or trivially short descriptions cannot be processed meaningfully by the downstream agents.
+
+If any rule fails, the claim is rejected with a specific error message and the AI pipeline is never called. This gives claimants immediate feedback rather than waiting ninety seconds for an agent to report an invalid field. It also keeps API costs low and reduces the abuse surface of the system.
+
+The deterministic layer and the agentic layer are intentionally separate. Rules are fast, cheap, and certain. Agents are powerful but slow and costly. Running rules first means agents only run when they need to.
+
+---
+
 ## The Four AI Agents
 
 This is what makes ClaimLens technically interesting. Rather than sending everything to a single AI model and hoping for a good answer, ClaimLens uses a multi-agent pipeline where each agent is specifically designed, prompted, and configured for one task. The output of each agent becomes the input context for the next.

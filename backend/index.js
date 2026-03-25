@@ -71,6 +71,41 @@ Please analyze this claim and extract all relevant information for processing.
 `;
 }
 
+function validateClaimRules(claimData) {
+  const errors = [];
+  const { policyNumber, incidentDate, estimatedValue, description } = claimData;
+
+  if (!/^[A-Za-z0-9\-]{6,30}$/.test(policyNumber)) {
+    errors.push('Policy number must be 6–30 alphanumeric characters (dashes allowed).');
+  }
+
+  const incident = new Date(incidentDate);
+  const today = new Date();
+  const twoYearsAgo = new Date();
+  twoYearsAgo.setFullYear(today.getFullYear() - 2);
+
+  if (isNaN(incident.getTime())) {
+    errors.push('Incident date is invalid.');
+  } else if (incident > today) {
+    errors.push('Incident date cannot be in the future.');
+  } else if (incident < twoYearsAgo) {
+    errors.push('Incident date cannot be more than 2 years ago.');
+  }
+
+  const value = parseFloat(estimatedValue);
+  if (isNaN(value) || value <= 0) {
+    errors.push('Estimated loss value must be greater than $0.');
+  } else if (value > 10000000) {
+    errors.push('Estimated loss value cannot exceed $10,000,000.');
+  }
+
+  if (!description || description.trim().length < 20) {
+    errors.push('Incident description must be at least 20 characters.');
+  }
+
+  return errors;
+}
+
 async function callAgent(agentId, message, imageBase64 = null) {
   const timeout = 120000;
 
@@ -124,6 +159,11 @@ app.post('/api/process-claim', async (req, res) => {
       return res.status(400).json({
         error: 'Missing required fields: claimData and imageBase64',
       });
+    }
+
+    const ruleErrors = validateClaimRules(claimData);
+    if (ruleErrors.length > 0) {
+      return res.status(422).json({ error: 'Claim validation failed', details: ruleErrors });
     }
 
     const formattedClaim = formatClaimData(claimData);
