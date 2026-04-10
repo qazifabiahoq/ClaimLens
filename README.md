@@ -86,7 +86,38 @@ A single AI model given all four tasks at once tends to produce inconsistent and
 This approach also makes the system more transparent and auditable. Every step of the reasoning is visible and logged separately. When an adjuster reviews a ClaimLens report, they can see exactly what each agent found and why the final recommendation was made. That matters in an industry where compliance and documentation are non-negotiable.
 
 ---
+## Guardrails and Responsible AI
 
+ClaimLens is designed with explicit safeguards at every layer of the pipeline to ensure that AI-generated outputs are never the final word on a claim without appropriate human oversight.
+
+**Human-in-the-Loop on Every Decision**
+The settlement recommendation produced by ClaimLens is always advisory. No claim is approved, denied, or escalated without a licensed human adjuster reviewing and signing off on the output. The system is designed to inform adjuster judgment, not replace it. Any claim dispositioned as Deny, Escalate for Investigation, or Approve with Conditions is automatically flagged for mandatory human review before any communication goes to the claimant.
+
+**Fraud Flag Review**
+When the Settlement Agent flags potential inconsistencies between the claim description, photographic evidence, and cost estimates, that flag is never acted on automatically. Fraud accusations carry serious legal and reputational consequences. Every fraud-related flag is routed to a senior adjuster for independent manual investigation before any action is taken.
+
+**High-Value Claim Threshold**
+Claims above a defined monetary threshold bypass the standard automated approval path entirely, regardless of the AI recommendation. These claims require full manual adjuster review. The threshold is configurable by the insurer based on their own risk tolerance and compliance requirements.
+
+**Vision Agent Confidence Reporting**
+When the Vision Agent cannot assess damage confidently due to image quality, lighting, or ambiguity, it explicitly reports low confidence rather than guessing. Claims where vision confidence falls below an acceptable level are flagged for physical inspection or resubmission with clearer photos. The system never silently fills in uncertainty with assumptions.
+
+**Claimant Right to Appeal**
+Every claimant receives a clear explanation of the recommendation made on their claim. If a claimant disagrees with the outcome, they have an explicit path to request manual review by a human adjuster through the Connect to Human Adjuster feature. AI-generated denials cannot be final without the claimant being informed of this right.
+
+**Audit Trail and Explainability**
+Every agent in the pipeline logs its structured output independently. This means every settlement recommendation comes with a complete, step-by-step record of what each agent found, what data it used, and how the final recommendation was reached. This audit trail is retained for compliance, regulatory review, and dispute resolution. Adjusters reviewing a ClaimLens report can see exactly what each agent found and why the final recommendation was made.
+
+**Data Privacy and Retention**
+Claimant photos, personal details, and incident descriptions are processed for claim resolution only. Uploaded images and personal data are not used to train or fine-tune any AI model. Data retention and deletion policies follow applicable insurance regulations and privacy law in the claimant's jurisdiction.
+
+**Bias Monitoring**
+Because regional pricing, claim descriptions, and other inputs could inadvertently encode demographic patterns, ClaimLens recommends that insurers deploying the system conduct periodic audits of settlement outcomes across claimant demographics. Disparate impact in denial rates or settlement amounts should trigger a review of agent prompts, cost research sources, and output distributions.
+
+**No Autonomous Action**
+ClaimLens produces recommendations and reports. It does not send settlement offers, issue payments, or communicate decisions to claimants directly. Every consequential action requires a human to initiate it after reviewing the AI output.
+
+---
 ## Who This Is Built For
 
 On the business side, ClaimLens is designed for insurance operations teams that process large volumes of claims and want to reduce manual adjuster workload without cutting corners on accuracy or compliance. Auto insurers handling collision claims benefit immediately since damage photos and repair cost research are both fully automated. Property insurers handling home or commercial claims can use the same pipeline for structural and water damage.
