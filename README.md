@@ -2,6 +2,11 @@
 
 AI-Powered Insurance Claims Processing. Decisions in Minutes.
 
+🏆 Bonus Blog Post Prize Winner | Amazon Nova AI Hackathon 2026 | 13,464 Participants Worldwide  
+Recognized for completeness, potential impact, real-world benefits to the insurance claims 
+community, and clear plans for encouraging adoption. Awarded $200 in AWS Credits.
+
+
 Live Demo: [https://claim-lens-xi.vercel.app](https://claim-lens-xi.vercel.app)
 
 Blog post : https://builder.aws.com/content/39rRB83mVGi7lhmHOPAVlwzKq87/claimlens-accelerating-insurance-claims-with-amazon-nova
